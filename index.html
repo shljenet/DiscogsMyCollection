@@ -15,7 +15,7 @@
 @media(prefers-color-scheme:dark){:root{--bg:#14110f;--fg:#f4ede4;--mut:#9a9088;--card:#262120;--glass:rgba(20,17,15,.78);--acc:#ff6a3d;--accfg:#14110f;--line:rgba(255,255,255,.09)}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{background:var(--bg);color-scheme:light dark}
-body{margin:0;font:15px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;color:var(--fg);background:var(--bg);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-font-smoothing:antialiased}
+body{margin:0;font:15px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;color:var(--fg);background:var(--bg);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-font-smoothing:antialiased;overflow-x:clip;max-width:100vw}
 header{position:sticky;top:0;z-index:5;background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 8px;border-bottom:1px solid var(--line)}
 .top{display:flex;align-items:flex-end;justify-content:space-between}
 h1{margin:0;font:800 32px/1.05 "SF Pro Rounded",ui-rounded,-apple-system,sans-serif;letter-spacing:-.03em}
@@ -31,11 +31,11 @@ h1{margin:0;font:800 32px/1.05 "SF Pro Rounded",ui-rounded,-apple-system,sans-se
 .chip{flex:none;border:0;border-radius:99px;padding:8px 14px;background:var(--card);color:var(--fg);font:600 14px inherit;font-family:inherit}
 .chip i{font-style:normal;color:var(--mut);margin-left:5px;font-weight:500}
 .chip.on{background:var(--acc);color:var(--accfg)}.chip.on i{color:inherit;opacity:.7}
-main{padding:14px 16px 40px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px 14px}
-@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
-@media(min-width:900px){.grid{grid-template-columns:repeat(6,1fr)}}
-.card{content-visibility:auto;contain-intrinsic-size:auto 230px}
+main{padding:14px 16px 40px;max-width:1200px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 12px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(min-width:900px){.grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.card{min-width:0;content-visibility:auto;contain-intrinsic-size:auto 200px}
 .cv{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--card);box-shadow:0 8px 22px -10px rgba(0,0,0,.45)}
 .cv img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .35s}
 .cv img.ok{opacity:1}
