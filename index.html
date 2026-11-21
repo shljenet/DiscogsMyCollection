@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vinilos">
+<meta name="theme-color" content="#14110f">
+<title>Vinilos</title>
+<link rel="apple-touch-icon" id="ico">
+<style>
+:root{--bg:#f3efe9;--fg:#1c1815;--mut:#7a716a;--card:#e6e0d8;--glass:rgba(243,239,233,.78);--acc:#e8502e;--accfg:#fff;--line:rgba(0,0,0,.08)}
+@media(prefers-color-scheme:dark){:root{--bg:#14110f;--fg:#f4ede4;--mut:#9a9088;--card:#262120;--glass:rgba(20,17,15,.78);--acc:#ff6a3d;--accfg:#14110f;--line:rgba(255,255,255,.09)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg);color-scheme:light dark}
+body{margin:0;font:15px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;color:var(--fg);background:var(--bg);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-font-smoothing:antialiased}
+header{position:sticky;top:0;z-index:5;background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 8px;border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:flex-end;justify-content:space-between}
+h1{margin:0;font:800 32px/1.05 "SF Pro Rounded",ui-rounded,-apple-system,sans-serif;letter-spacing:-.03em}
+.sub{color:var(--mut);font-size:13px;margin-top:2px}
+.ib{border:0;background:var(--card);color:var(--fg);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;margin-left:8px}
+.ib svg{width:19px;height:19px}
+.search{position:relative;margin:12px 0 10px}
+.search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:var(--mut)}
+.search input{width:100%;border:0;background:var(--card);color:var(--fg);border-radius:13px;padding:11px 12px 11px 38px;font:inherit;font-size:16px;outline:none}
+.search input:focus{box-shadow:0 0 0 2px var(--acc)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px 4px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:0;border-radius:99px;padding:8px 14px;background:var(--card);color:var(--fg);font:600 14px inherit;font-family:inherit}
+.chip i{font-style:normal;color:var(--mut);margin-left:5px;font-weight:500}
+.chip.on{background:var(--acc);color:var(--accfg)}.chip.on i{color:inherit;opacity:.7}
+main{padding:14px 16px 40px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px 14px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:900px){.grid{grid-template-columns:repeat(6,1fr)}}
+.card{content-visibility:auto;contain-intrinsic-size:auto 230px}
+.cv{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--card);box-shadow:0 8px 22px -10px rgba(0,0,0,.45)}
+.cv img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .35s}
+.cv img.ok{opacity:1}
+.play{position:absolute;right:8px;bottom:8px;width:38px;height:38px;border:0;border-radius:50%;background:var(--acc);color:var(--accfg);display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.35);transition:transform .15s}
+.play:active{transform:scale(.88)}
+.play svg{width:16px;height:16px;margin-left:2px}
+.t{margin-top:8px;font-weight:650;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a{color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.sk{aspect-ratio:1;border-radius:12px;background:linear-gradient(100deg,var(--card) 30%,var(--line) 50%,var(--card) 70%);background-size:300% 100%;animation:sh 1.3s infinite}
+@keyframes sh{to{background-position:-100% 0}}
+.empty{text-align:center;color:var(--mut);padding:60px 20px}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s;z-index:10}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--bg);border-radius:24px 24px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);max-width:560px;margin:0 auto}
+.sheet.on{transform:none}
+.grab{width:38px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 14px}
+.sh{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.sh img{width:64px;height:64px;border-radius:9px;object-fit:cover;background:var(--card)}
+.sh b{display:block;font-size:16px}.sh span{color:var(--mut)}
+.opt{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;background:var(--card);color:var(--fg);text-decoration:none;font-weight:600;margin-top:8px}
+.opt small{display:block;color:var(--mut);font-weight:400;font-size:12.5px}
+.dot{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:none}
+.sheet label{display:block;font-weight:600;margin:12px 0 6px}
+.sheet input{width:100%;border:0;background:var(--card);color:var(--fg);border-radius:12px;padding:12px;font:inherit;font-size:16px;outline:none}
+.btn{width:100%;border:0;border-radius:14px;padding:14px;margin-top:14px;font:700 16px inherit;font-family:inherit;background:var(--acc);color:var(--accfg)}
+.btn.g{background:var(--card);color:var(--fg);margin-top:8px}
+.hint{color:var(--mut);font-size:13px;margin:8px 0 0}.hint a{color:var(--acc)}
+.err{color:#e5484d;font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div><h1>Mi colección</h1><div class="sub" id="count">&nbsp;</div></div>
+    <div style="display:flex">
+      <button class="ib" id="sortBtn" aria-label="Ordenar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg></button>
+      <button class="ib" id="cfgBtn" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button>
+    </div>
+  </div>
+  <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar artista" autocomplete="off" enterkeyhint="search"></div>
+  <div class="chips" id="chips"></div>
+</header>
+<main><div class="grid" id="grid"></div></main>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+
+<script>
+// Opcional: puedes dejar tu usuario y token aquí. Si el sitio es público, mejor déjalos vacíos y captúralos en la app.
+const DEFAULT_USER = "", DEFAULT_TOKEN = "";
+
+const $ = s => document.querySelector(s);
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)) }catch(e){} }
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clean = n => n.replace(/\s\(\d+\)$/, '');
+const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+let cred = store.get('cred', {user: DEFAULT_USER, token: DEFAULT_TOKEN});
+let S = {items: store.get('items', []), folders: store.get('folders', []), folder: 'all', q: '', sort: store.get('sort', 'new')};
+
+// Ícono de pantalla de inicio generado al vuelo
+(function(){
+  const c = document.createElement('canvas'); c.width = c.height = 180; const x = c.getContext('2d');
+  const g = x.createLinearGradient(0,0,180,180); g.addColorStop(0,'#2a211d'); g.addColorStop(1,'#0e0b0a');
+  x.fillStyle = g; x.fillRect(0,0,180,180);
+  x.fillStyle = '#ff6a3d'; x.beginPath(); x.arc(90,90,62,0,7); x.fill();
+  x.fillStyle = '#14110f'; x.beginPath(); x.arc(90,90,52,0,7); x.fill();
+  x.strokeStyle = '#3a302b'; x.lineWidth = 2;
+  [44,34,24].forEach(r => { x.beginPath(); x.arc(90,90,r,0,7); x.stroke(); });
+  x.fillStyle = '#ff6a3d'; x.beginPath(); x.arc(90,90,14,0,7); x.fill();
+  x.fillStyle = '#14110f'; x.beginPath(); x.arc(90,90,3,0,7); x.fill();
+  $('#ico').href = c.toDataURL('image/png');
+})();
+
+const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg>';
+
+function render(){
+  const q = norm(S.q.trim());
+  let list = S.items.filter(i => (S.folder === 'all' || i.f === S.folder) && (!q || norm(i.a).includes(q) || norm(i.t).includes(q)));
+  if (S.sort === 'az') list = [...list].sort((a, b) => a.a.localeCompare(b.a, 'es') || a.t.localeCompare(b.t, 'es'));
+  $('#count').textContent = S.items.length ? list.length + ' de ' + S.items.length + ' discos' : '';
+  $('#grid').innerHTML = list.length ? list.map(i =>
+    `<div class="card"><div class="cv"><img loading="lazy" decoding="async" src="${esc(i.c)}" alt="" onload="this.classList.add('ok')" onerror="this.classList.add('ok')"><button class="play" data-id="${i.id}" aria-label="Escuchar ${esc(i.t)}">${ICON_PLAY}</button></div><div class="t">${esc(i.t)}</div><div class="a">${esc(i.a)}</div></div>`
+  ).join('') : (S.items.length ? '<div class="empty" style="grid-column:1/-1">Sin resultados para esta búsqueda.</div>' : '');
+  const n = id => S.items.filter(i => i.f === id).length;
+  $('#chips').innerHTML = `<button class="chip ${S.folder==='all'?'on':''}" data-f="all">Todo<i>${S.items.length}</i></button>` +
+    S.folders.map(f => `<button class="chip ${S.folder===f.id?'on':''}" data-f="${f.id}">${esc(f.name)}<i>${f.count}</i></button>`).join('');
+}
+
+function skeleton(){ $('#grid').innerHTML = Array(8).fill('<div><div class="sk"></div></div>').join(''); }
+
+async function api(path){
+  const r = await fetch('https://api.discogs.com' + path, {headers: {Authorization: 'Discogs token=' + cred.token}});
+  if (!r.ok) throw new Error(r.status === 401 ? 'Token no válido' : r.status === 404 ? 'Usuario no encontrado' : 'Error ' + r.status);
+  return r.json();
+}
+
+async function sync(){
+  if (!cred.user || !cred.token) return openSetup();
+  if (!S.items.length) skeleton();
+  try{
+    const fr = await api(`/users/${encodeURIComponent(cred.user)}/collection/folders`);
+    S.folders = fr.folders.filter(f => f.id !== 0 && f.count > 0).map(f => ({id: f.id, name: f.name, count: f.count}));
+    store.set('folders', S.folders);
+    let page = 1, pages = 1, all = [];
+    do{
+      const d = await api(`/users/${encodeURIComponent(cred.user)}/collection/folders/0/releases?per_page=100&page=${page}&sort=added&sort_order=desc`);
+      pages = d.pagination.pages;
+      d.releases.forEach(r => {
+        const b = r.basic_information;
+        all.push({id: b.id, t: b.title, a: b.artists.map(x => clean(x.name)).join(', '), c: b.cover_image || b.thumb, f: r.folder_id});
+      });
+      if (!S.items.length || page === pages){ S.items = all.slice(); render(); }
+      page++;
+    } while (page <= pages);
+    S.items = all; store.set('items', all); render();
+  }catch(e){
+    if (!S.items.length){ $('#grid').innerHTML = ''; openSetup(e.message); }
+  }
+}
+
+function openSheet(html){ $('#sheet').innerHTML = '<div class="grab"></div>' + html; $('#sheet').classList.add('on'); $('#scrim').classList.add('on'); }
+function closeSheet(){ $('#sheet').classList.remove('on'); $('#scrim').classList.remove('on'); }
+
+function openSetup(err){
+  openSheet(`<h2 style="margin:0 0 4px;font-size:22px">Conecta Discogs</h2>
+  <p class="hint" style="margin-top:0">Se guarda solo en este dispositivo.</p>
+  <label for="u">Usuario de Discogs</label><input id="u" value="${esc(cred.user)}" autocapitalize="none" autocorrect="off">
+  <label for="k">Token personal</label><input id="k" value="${esc(cred.token)}" autocapitalize="none" autocorrect="off">
+  <p class="hint">Créalo en <a href="https://www.discogs.com/settings/developers" target="_blank" rel="noopener">Discogs › Settings › Developers</a> con “Generate new token”.</p>
+  ${err ? `<div class="err">${esc(err)}</div>` : ''}
+  <button class="btn" id="save">Guardar y cargar</button>
+  ${S.items.length ? '<button class="btn g" id="refresh">Actualizar colección</button>' : ''}`);
+}
+
+function openPlay(id){
+  const i = S.items.find(x => x.id == id); if (!i) return;
+  const q = encodeURIComponent(i.a + ' ' + i.t);
+  openSheet(`<div class="sh"><img src="${esc(i.c)}" alt=""><div style="min-width:0"><b>${esc(i.t)}</b><span>${esc(i.a)}</span></div></div>
+  <a class="opt" target="_blank" rel="noopener" href="https://music.apple.com/search?term=${q}"><span class="dot" style="background:#fa2d48">♪</span><div>Apple Music<small>Buscar este disco</small></div></a>
+  <a class="opt" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${q}"><span class="dot" style="background:#e62117">${ICON_PLAY.replace('<svg','<svg width="14" height="14"')}</span><div>YouTube<small>Ver reproducciones</small></div></a>
+  <a class="opt" target="_blank" rel="noopener" href="https://www.discogs.com/release/${i.id}"><span class="dot" style="background:#333">D</span><div>Discogs<small>Ficha del disco y videos</small></div></a>`);
+}
+
+document.addEventListener('click', e => {
+  const p = e.target.closest('.play'); if (p) return openPlay(p.dataset.id);
+  const c = e.target.closest('.chip'); if (c){ S.folder = c.dataset.f === 'all' ? 'all' : +c.dataset.f; render(); return; }
+  if (e.target.id === 'save'){
+    cred = {user: $('#u').value.trim(), token: $('#k').value.trim()}; store.set('cred', cred); closeSheet(); sync(); return;
+  }
+  if (e.target.id === 'refresh'){ closeSheet(); sync(); return; }
+  if (e.target.id === 'scrim') closeSheet();
+});
+$('#q').addEventListener('input', e => { S.q = e.target.value; render(); });
+$('#cfgBtn').onclick = () => openSetup();
+$('#sortBtn').onclick = () => { S.sort = S.sort === 'new' ? 'az' : 'new'; store.set('sort', S.sort); render(); $('#count').textContent = (S.sort === 'az' ? 'A–Z · ' : 'Recientes · ') + $('#count').textContent; };
+
+render();   // muestra al instante lo guardado
+sync();     // y se actualiza en segundo plano
+</script>
+</body>
+</html>
