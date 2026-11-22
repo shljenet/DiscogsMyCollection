@@ -46,6 +46,24 @@ main{padding:14px 16px 40px;max-width:1200px;margin:0 auto}
 .a{color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 .sk{aspect-ratio:1;border-radius:12px;background:linear-gradient(100deg,var(--card) 30%,var(--line) 50%,var(--card) 70%);background-size:300% 100%;animation:sh 1.3s infinite}
 @keyframes sh{to{background-position:-100% 0}}
+.hero{position:relative;margin:-14px -16px 20px;height:min(92vw,430px);overflow:hidden;touch-action:pan-y;background:#000}
+.hero[hidden]{display:none}
+.slide{position:absolute;inset:0;opacity:0;transition:opacity .9s ease;pointer-events:none}
+.slide.on{opacity:1;pointer-events:auto}
+.bg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(26px) saturate(1.35) brightness(.9);transform:scale(1.1)}
+.shade{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.12) 0%,rgba(0,0,0,.5) 58%,var(--bg) 100%)}
+.inner{position:absolute;inset:0;display:flex;align-items:center;gap:16px;padding:0 18px 40px;color:#fff}
+.txt{flex:1;min-width:0}
+.tag{display:inline-block;background:var(--acc);color:var(--accfg);font:800 10.5px/1 inherit;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:99px}
+.txt h2{margin:10px 0 3px;font:800 25px/1.08 "SF Pro Rounded",ui-rounded,-apple-system,sans-serif;letter-spacing:-.02em;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.txt p{margin:0;opacity:.85;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.txt small{display:block;opacity:.65;font-size:12.5px;margin-top:4px}
+.hplay{margin-top:14px;border:0;background:#fff;color:#111;border-radius:99px;padding:10px 18px;font:700 14.5px inherit;font-family:inherit;display:inline-flex;align-items:center;gap:7px}
+.hplay svg{width:13px;height:13px}
+.art{width:40%;max-width:190px;aspect-ratio:1;object-fit:cover;border-radius:12px;box-shadow:0 20px 40px -10px rgba(0,0,0,.75);flex:none}
+.dots{position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;gap:7px;z-index:2}
+.dot{width:7px;height:7px;border-radius:99px;border:0;padding:0;background:var(--mut);opacity:.5;transition:all .3s}
+.dot.on{width:20px;background:var(--acc);opacity:1}
 .empty{text-align:center;color:var(--mut);padding:60px 20px}
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s;z-index:10}
 .scrim.on{opacity:1;pointer-events:auto}
@@ -78,7 +96,7 @@ main{padding:14px 16px 40px;max-width:1200px;margin:0 auto}
   <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Buscar artista" autocomplete="off" enterkeyhint="search"></div>
   <div class="chips" id="chips"></div>
 </header>
-<main><div class="grid" id="grid"></div></main>
+<main><section class="hero" id="hero" hidden></section><div class="grid" id="grid"></div></main>
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet"></div>
 
@@ -96,7 +114,7 @@ const clean = n => n.replace(/\s\(\d+\)$/, '');
 const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 let cred = store.get('cred', {user: DEFAULT_USER, token: DEFAULT_TOKEN});
-let S = {items: store.get('items', []), folders: store.get('folders', []), folder: 'all', q: '', sort: store.get('sort', 'new')};
+let S = {hero: store.get('hero', []), items: store.get('items', []), folders: store.get('folders', []), folder: 'all', q: '', sort: store.get('sort', 'new')};
 
 // Ícono de pantalla de inicio generado al vuelo
 (function(){
@@ -116,6 +134,7 @@ const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14
 
 function render(){
   const q = norm(S.q.trim());
+  $('#hero').hidden = !(S.hero.length && S.folder === 'all' && !q);
   let list = S.items.filter(i => (S.folder === 'all' || i.f === S.folder) && (!q || norm(i.a).includes(q) || norm(i.t).includes(q)));
   if (S.sort === 'az') list = [...list].sort((a, b) => a.a.localeCompare(b.a, 'es') || a.t.localeCompare(b.t, 'es'));
   $('#count').textContent = S.items.length ? list.length + ' de ' + S.items.length + ' discos' : '';
@@ -142,18 +161,20 @@ async function sync(){
     const fr = await api(`/users/${encodeURIComponent(cred.user)}/collection/folders`);
     S.folders = fr.folders.filter(f => f.id !== 0 && f.count > 0).map(f => ({id: f.id, name: f.name, count: f.count}));
     store.set('folders', S.folders);
-    let page = 1, pages = 1, all = [];
+    let page = 1, pages = 1, all = [], cnt = {};
     do{
       const d = await api(`/users/${encodeURIComponent(cred.user)}/collection/folders/0/releases?per_page=100&page=${page}&sort=added&sort_order=desc`);
       pages = d.pagination.pages;
       d.releases.forEach(r => {
         const b = r.basic_information;
+        (b.styles || []).forEach(x => cnt[x] = (cnt[x] || 0) + 1);
         all.push({id: b.id, t: b.title, a: b.artists.map(x => clean(x.name)).join(', '), c: b.cover_image || b.thumb, f: r.folder_id});
       });
       if (!S.items.length || page === pages){ S.items = all.slice(); render(); }
       page++;
     } while (page <= pages);
     S.items = all; store.set('items', all); render();
+    store.set('ts', Object.keys(cnt).sort((x, y) => cnt[y] - cnt[x])[0] || ''); buildHero();
   }catch(e){
     if (!S.items.length){ $('#grid').innerHTML = ''; openSetup(e.message); }
   }
@@ -165,37 +186,92 @@ function closeSheet(){ $('#sheet').classList.remove('on'); $('#scrim').classList
 function openSetup(err){
   openSheet(`<h2 style="margin:0 0 4px;font-size:22px">Conecta Discogs</h2>
   <p class="hint" style="margin-top:0">Se guarda solo en este dispositivo.</p>
-  <label for="u">Usuario de Discogs</label><input id="u" value="${esc(cred.user)}" autocapitalize="none" autocorrect="off">
-  <label for="k">Token personal</label><input id="k" value="${esc(cred.token)}" autocapitalize="none" autocorrect="off">
+  <form id="f" method="post" action="#" autocomplete="on"><label for="u">Usuario de Discogs</label><input id="u" name="username" type="text" autocomplete="username" value="${esc(cred.user)}" autocapitalize="none" autocorrect="off" spellcheck="false">
+  <label for="k">Token personal</label><input id="k" name="password" type="password" autocomplete="current-password" value="${esc(cred.token)}" autocapitalize="none" autocorrect="off" spellcheck="false">
   <p class="hint">Créalo en <a href="https://www.discogs.com/settings/developers" target="_blank" rel="noopener">Discogs › Settings › Developers</a> con “Generate new token”.</p>
   ${err ? `<div class="err">${esc(err)}</div>` : ''}
-  <button class="btn" id="save">Guardar y cargar</button>
+  <button class="btn" id="save" type="submit">Guardar y cargar</button></form>
   ${S.items.length ? '<button class="btn g" id="refresh">Actualizar colección</button>' : ''}`);
 }
 
 function openPlay(id){
-  const i = S.items.find(x => x.id == id); if (!i) return;
+  const i = S.items.find(x => x.id == id) || S.hero.find(x => x.id == id); if (!i) return;
   const q = encodeURIComponent(i.a + ' ' + i.t);
   openSheet(`<div class="sh"><img src="${esc(i.c)}" alt=""><div style="min-width:0"><b>${esc(i.t)}</b><span>${esc(i.a)}</span></div></div>
   <a class="opt" target="_blank" rel="noopener" href="https://music.apple.com/search?term=${q}"><span class="dot" style="background:#fa2d48">♪</span><div>Apple Music<small>Buscar este disco</small></div></a>
   <a class="opt" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${q}"><span class="dot" style="background:#e62117">${ICON_PLAY.replace('<svg','<svg width="14" height="14"')}</span><div>YouTube<small>Ver reproducciones</small></div></a>
-  <a class="opt" target="_blank" rel="noopener" href="https://www.discogs.com/release/${i.id}"><span class="dot" style="background:#333">D</span><div>Discogs<small>Ficha del disco y videos</small></div></a>`);
+  <a class="opt" target="_blank" rel="noopener" href="${esc(i.u || 'https://www.discogs.com/release/' + i.id)}"><span class="dot" style="background:#333">D</span><div>Discogs<small>Ficha del disco y videos</small></div></a>`);
 }
 
 document.addEventListener('click', e => {
-  const p = e.target.closest('.play'); if (p) return openPlay(p.dataset.id);
+  const p = e.target.closest('.play,.hplay'); if (p) return openPlay(p.dataset.id);
   const c = e.target.closest('.chip'); if (c){ S.folder = c.dataset.f === 'all' ? 'all' : +c.dataset.f; render(); return; }
-  if (e.target.id === 'save'){
-    cred = {user: $('#u').value.trim(), token: $('#k').value.trim()}; store.set('cred', cred); closeSheet(); sync(); return;
-  }
   if (e.target.id === 'refresh'){ closeSheet(); sync(); return; }
   if (e.target.id === 'scrim') closeSheet();
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  cred = {user: $('#u').value.trim(), token: $('#k').value.trim()}; store.set('cred', cred); closeSheet(); sync();
 });
 $('#q').addEventListener('input', e => { S.q = e.target.value; render(); });
 $('#cfgBtn').onclick = () => openSetup();
 $('#sortBtn').onclick = () => { S.sort = S.sort === 'new' ? 'az' : 'new'; store.set('sort', S.sort); render(); $('#count').textContent = (S.sort === 'az' ? 'A–Z · ' : 'Recientes · ') + $('#count').textContent; };
 
-render();   // muestra al instante lo guardado
+let hi = 0, tm = null;
+function show(i){
+  const n = S.hero.length; if (!n) return; hi = (i + n) % n;
+  document.querySelectorAll('#hero .slide').forEach((el, k) => el.classList.toggle('on', k === hi));
+  document.querySelectorAll('#hero .dot').forEach((el, k) => el.classList.toggle('on', k === hi));
+}
+function auto(){ clearInterval(tm); if (S.hero.length > 1) tm = setInterval(() => { if (!document.hidden) show(hi + 1); }, 6500); }
+function renderHero(){
+  const H = S.hero, el = $('#hero'); if (!H.length){ el.innerHTML = ''; return; }
+  if (hi >= H.length) hi = 0;
+  el.innerHTML = H.map((s, i) => `<div class="slide ${i===hi?'on':''}"><div class="bg" style="background-image:url('${esc(s.c)}')"></div><div class="shade"></div><div class="inner"><div class="txt"><span class="tag">${esc(s.tag)}</span><h2>${esc(s.t)}</h2><p>${esc(s.a)}</p>${s.sub?`<small>${esc(s.sub)}</small>`:''}<button class="hplay" data-id="${s.id}">${ICON_PLAY}Escuchar</button></div><img class="art" src="${esc(s.c)}" alt=""></div></div>`).join('')
+    + (H.length > 1 ? '<div class="dots">' + H.map((_, i) => `<button class="dot ${i===hi?'on':''}" data-d="${i}" aria-label="Destacado ${i+1}"></button>`).join('') + '</div>' : '');
+  auto();
+}
+async function incoming(){
+  const d = await api('/marketplace/orders?per_page=20&sort=last_activity&sort_order=desc');
+  const have = new Set(S.items.map(i => i.id)), out = [];
+  for (const o of d.orders || []){
+    if (!o.buyer || o.buyer.username.toLowerCase() !== cred.user.toLowerCase()) continue;
+    if (!/^(Payment Received|In Progress|Shipped)$/i.test(o.status)) continue;
+    if (o.last_activity && Date.now() - Date.parse(o.last_activity) > 60 * 864e5) continue;
+    for (const it of o.items || []){
+      const id = it.release && it.release.id; if (!id || have.has(id) || out.length >= 3) continue;
+      const r = await api('/releases/' + id);
+      out.push({tag: 'En camino', sub: o.status === 'Shipped' ? 'Pedido enviado' : 'Pedido en proceso', t: r.title, a: (r.artists || []).map(x => clean(x.name)).join(', '), c: (r.images && r.images[0] && r.images[0].uri) || r.thumb, u: 'https://www.discogs.com/release/' + id});
+    }
+  }
+  return out;
+}
+async function suggest(){
+  const st = store.get('ts', ''); if (!st) return null;
+  const d = await api('/database/search?type=master&style=' + encodeURIComponent(st) + '&sort=have&sort_order=desc&per_page=50&page=' + (1 + Math.floor(Math.random() * 3)));
+  const mine = new Set(S.items.map(i => norm(i.a)));
+  const c = (d.results || []).filter(r => r.cover_image && !/spacer/.test(r.cover_image) && !mine.has(norm(r.title.split(' - ')[0].replace(/\s\(\d+\)$/, ''))));
+  const r = c[Math.floor(Math.random() * c.length)]; if (!r) return null;
+  const [a, ...t] = r.title.split(' - ');
+  return {tag: 'Sugerencia para ti', sub: 'Porque coleccionas ' + st, t: t.join(' - '), a: clean(a), c: r.cover_image, u: 'https://www.discogs.com' + r.uri};
+}
+async function buildHero(){
+  const it = S.items, h = [];
+  try{ h.push(...await incoming()); }catch(e){}
+  if (it[0]) h.push({tag: 'Recién añadido', t: it[0].t, a: it[0].a, c: it[0].c, u: 'https://www.discogs.com/release/' + it[0].id});
+  try{ const g = await suggest(); if (g) h.push(g); }catch(e){}
+  if (it.length > 2){ const r = it[2 + Math.floor(Math.random() * (it.length - 2))]; h.push({tag: 'De tu colección', t: r.t, a: r.a, c: r.c, u: 'https://www.discogs.com/release/' + r.id}); }
+  h.forEach((x, i) => x.id = 'h' + i);
+  S.hero = h; store.set('hero', h); renderHero(); render();
+}
+(function(){
+  const el = $('#hero'); let tx = 0;
+  el.addEventListener('click', e => { const d = e.target.closest('.dot'); if (d){ show(+d.dataset.d); auto(); } });
+  el.addEventListener('touchstart', e => { tx = e.touches[0].clientX; clearInterval(tm); }, {passive: true});
+  el.addEventListener('touchend', e => { const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 40) show(hi + (dx < 0 ? 1 : -1)); auto(); }, {passive: true});
+})();
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+renderHero(); render();   // muestra al instante lo guardado
 sync();     // y se actualiza en segundo plano
 </script>
 </body>
